@@ -11,7 +11,8 @@ import (
 	otto_Parser "github.com/robertkrimen/otto/parser"
 
 	"flag"
-	"time"
+	"io/ioutil"
+	"path"
 )
 
 const (
@@ -35,8 +36,6 @@ func main() {
 		return
 	}
 
-	start := time.Now()
-
 	m, err := parseGojaApi(*gojaApi)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -45,8 +44,6 @@ func main() {
 
 	problems := checkJS(*js, m)
 
-	fmt.Printf("Time: %s\n", time.Since(start))
-	fmt.Println(len(problems))
 	fmt.Println(strings.Join(problems, "\n"))
 }
 
@@ -148,4 +145,19 @@ func checkJS(dir string, m map[string]Range) []string {
 	}
 
 	return problems
+}
+
+
+func getAllFiles(root string) []string {
+	var ret []string
+	list, _ := ioutil.ReadDir(root)
+	for _, l := range list {
+		if l.IsDir() {
+			ret = append(ret, getAllFiles(path.Join(root, l.Name()))...)
+		} else if strings.HasSuffix(l.Name(), ".js") {
+			ret = append(ret, path.Join(root, l.Name()))
+		}
+	}
+
+	return ret
 }
