@@ -79,8 +79,10 @@ func parseGojaApi(file string) (map[string]Range, error) {
 			if comment, ok := functions[functionName]; ok {
 				args := Range{min: len(call.Args), max:len(call.Args)}
 				if comment != "" {
-					s := comment[strings.Index(comment, linterTag):]
+					s := strings.TrimLeft(comment, linterTag)
+					s = strings.TrimSpace(s)
 					s = strings.Replace(s, "?", mayBeAbsent, -1)
+
 					expr, err := parser.ParseExpr(s)
 					if err == nil {
 						if call, ok := expr.(*ast.CallExpr); ok {
