@@ -11,3 +11,5 @@ c = undefined;
 if (!c) {
     Sum(a, b);
 }
+
+Sum("empty");

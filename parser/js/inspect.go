@@ -1,7 +1,7 @@
-package main
+package js
 
 import (
-	ast "github.com/robertkrimen/otto/ast"
+	"github.com/robertkrimen/otto/ast"
 )
 
 type inspector func(ast.Node) bool

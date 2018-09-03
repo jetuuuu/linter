@@ -2,28 +2,15 @@ package main
 
 import (
 	"fmt"
-	"go/ast"
-	"go/parser"
-	"go/token"
-	"strings"
-
-	otto_ast "github.com/robertkrimen/otto/ast"
-	otto_Parser "github.com/robertkrimen/otto/parser"
-
 	"flag"
-	"io/ioutil"
-	"path"
-)
-
-const (
-	optional  = "_optional"
-	linterTag = "js:"
+	"github.com/jetuuuu/linter/parser/golang"
+	"github.com/jetuuuu/linter/parser/js"
 )
 
 func main() {
 
 	gojaApi := flag.String("go", "", "path to goja api .go file")
-	js := flag.String("js", "", "path to js dir")
+	jsDir := flag.String("js", "", "path to js dir")
 	flag.Parse()
 
 	if err := validFlag(gojaApi, "go"); err != nil {
@@ -31,20 +18,22 @@ func main() {
 		return
 	}
 
-	if err := validFlag(js, "js"); err != nil {
+	if err := validFlag(jsDir, "js"); err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 
-	m, err := parseGojaApi(*gojaApi)
+	gojaFunctions, err := golang.Parse(*gojaApi)
 	if err != nil {
-		fmt.Println(err.Error())
-		return
+		panic(err.Error())
 	}
 
-	problems := checkJS(*js, m)
+	problems := js.ParseAndCheck(*jsDir, gojaFunctions)
 
-	fmt.Println(strings.Join(problems, "\n"))
+	fmt.Println("Total errors:", len(problems))
+	for _, p := range problems {
+		fmt.Printf("%s:%d:%d -- %s must %s but %d\n", p.File, p.Pos.Line, p.Pos.Pos, p.Function, p.ExpectedArgs, p.ActualArgs)
+	}
 }
 
 func validFlag(f *string, name string) error {
@@ -53,111 +42,4 @@ func validFlag(f *string, name string) error {
 	}
 
 	return nil
-}
-
-func parseGojaApi(file string) (map[string]Range, error) {
-	fset := token.NewFileSet()
-	f, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
-	if err != nil {
-		return nil, err
-	}
-
-	m := make(map[string]Range)
-	functions := make(map[string]string)
-
-
-	ast.Inspect(f, func(n ast.Node) bool {
-		call, ok := n.(*ast.CallExpr)
-		if ok && call != nil && call.Fun != nil {
-			var functionName string
-			if fun, ok := call.Fun.(*ast.SelectorExpr); ok {
-				functionName = fun.Sel.Name
-			} else {
-				functionName = fmt.Sprintf("%s", call.Fun)
-			}
-
-			if comment, ok := functions[functionName]; ok {
-				args := Range{min: len(call.Args), max:len(call.Args)}
-				if comment != "" {
-					s := strings.TrimLeft(comment, linterTag)
-					s = strings.TrimSpace(s)
-					s = strings.Replace(s, "?", optional, -1)
-
-					expr, err := parser.ParseExpr(s)
-					if err == nil {
-						if call, ok := expr.(*ast.CallExpr); ok {
-							for _, a := range call.Args {
-								if ident, ok := a.(*ast.Ident); ok {
-									if strings.HasSuffix(ident.Name, optional) {
-										args.min--
-									}
-								}
-							}
-						}
-					}
-				}
-
-				m[functionName] = args
-			}
-		} else if decl, ok := n.(*ast.FuncDecl); ok {
-			name := decl.Name.Name
-			if decl.Name.IsExported() {
-				var comment string
-				if decl.Doc != nil {
-					comment = decl.Doc.Text()
-				}
-
-				functions[name] = comment
-			}
-		}
-
-		return true
-	})
-
-	return m, nil
-}
-
-func checkJS(dir string, m map[string]Range) []string {
-	files := getAllFiles(dir)
-	fmt.Println(len(files))
-
-	var problems []string
-	for i := range files {
-
-		prg, err := otto_Parser.ParseFile(nil, files[i], nil, 0)
-		if err != nil {
-			continue
-		}
-
-		Inspect(prg, func(node otto_ast.Node) bool {
-			call, ok := node.(*otto_ast.CallExpression)
-			if ok {
-				if ident, ok := call.Callee.(*otto_ast.Identifier); ok {
-					actualArgs := len(call.ArgumentList)
-					if expectedArgs, ok := m[ident.Name]; ok && !expectedArgs.Contains(actualArgs) {
-						problems = append(problems, fmt.Sprintf("%s: %s must %s but %d", files[i], ident.Name, expectedArgs, actualArgs))
-					}
-				}
-			}
-
-			return true
-		})
-	}
-
-	return problems
-}
-
-
-func getAllFiles(root string) []string {
-	var ret []string
-	list, _ := ioutil.ReadDir(root)
-	for _, l := range list {
-		if l.IsDir() {
-			ret = append(ret, getAllFiles(path.Join(root, l.Name()))...)
-		} else if strings.HasSuffix(l.Name(), ".js") {
-			ret = append(ret, path.Join(root, l.Name()))
-		}
-	}
-
-	return ret
 }
