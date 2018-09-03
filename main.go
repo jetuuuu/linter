@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	mayBeAbsent = "_mayBeAbsent"
+	optional  = "_optional"
 	linterTag = "js:"
 )
 
@@ -81,21 +81,19 @@ func parseGojaApi(file string) (map[string]Range, error) {
 				if comment != "" {
 					s := strings.TrimLeft(comment, linterTag)
 					s = strings.TrimSpace(s)
-					s = strings.Replace(s, "?", mayBeAbsent, -1)
+					s = strings.Replace(s, "?", optional, -1)
 
 					expr, err := parser.ParseExpr(s)
 					if err == nil {
 						if call, ok := expr.(*ast.CallExpr); ok {
-							min := 0
 							for _, a := range call.Args {
-								if !strings.HasSuffix(a.(*ast.Ident).Name, mayBeAbsent) {
-									min++
+								if ident, ok := a.(*ast.Ident); ok {
+									if strings.HasSuffix(ident.Name, optional) {
+										args.min--
+									}
 								}
 							}
-							args.min = min
 						}
-					} else {
-						fmt.Println(err)
 					}
 				}
 
