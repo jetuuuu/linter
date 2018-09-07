@@ -1,8 +1,8 @@
 package diapason
 
 import (
-	"testing"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestRange_Contains(t *testing.T) {

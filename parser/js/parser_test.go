@@ -1,15 +1,15 @@
 package js
 
 import (
-	"testing"
 	"github.com/jetuuuu/linter/diapason"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestParseAndCheck(t *testing.T) {
 	gojaFunctions := map[string]diapason.Range{
 		"IncOne": {Min: 1, Max: 2},
-		"Sum": {Min: 2, Max: 3},
+		"Sum":    {Min: 2, Max: 3},
 	}
 	problems := ParseAndCheck("testdata", gojaFunctions)
 
@@ -20,25 +20,24 @@ func TestParseAndCheck(t *testing.T) {
 		mapProblems[p.Function] = append(mapProblems[p.Function], p)
 	}
 
-
 	incOne := Problem{
-		File: "testdata/dir_one/one.js",
-		Function: "IncOne",
-		Pos: Position{Line: 13, Pos: 124},
-		ActualArgs: 3,
+		File:         "testdata/dir_one/one.js",
+		Function:     "IncOne",
+		Pos:          Position{Line: 13, Pos: 124},
+		ActualArgs:   3,
 		ExpectedArgs: gojaFunctions["IncOne"],
 	}
 
 	sum := Problem{
-		File: "testdata/simple.js",
-		Function: "Sum",
-		Pos: Position{Line: 15, Pos: 129},
-		ActualArgs: 1,
+		File:         "testdata/simple.js",
+		Function:     "Sum",
+		Pos:          Position{Line: 15, Pos: 129},
+		ActualArgs:   1,
 		ExpectedArgs: gojaFunctions["Sum"],
 	}
 
 	assert.Equal(t, map[string][]Problem{
 		"IncOne": {incOne},
-		"Sum": {sum},
+		"Sum":    {sum},
 	}, mapProblems)
 }

@@ -1,12 +1,12 @@
 package golang
 
 import (
-	"go/token"
-	"go/parser"
-	"go/ast"
 	"fmt"
-	"strings"
 	"github.com/jetuuuu/linter/diapason"
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"strings"
 )
 
 const (
@@ -16,7 +16,7 @@ const (
 
 type inspector struct {
 	declFunctions map[string]string
-	functions map[string]diapason.Range
+	functions     map[string]diapason.Range
 }
 
 func Parse(file string) (map[string]diapason.Range, error) {

@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/robertkrimen/otto/ast"
-	"github.com/robertkrimen/otto/parser"
 	"github.com/robertkrimen/otto/file"
+	"github.com/robertkrimen/otto/parser"
 )
 
 var cache = make(map[string][]string)
@@ -23,7 +23,7 @@ type Problem struct {
 
 type Position struct {
 	Line int
-	Pos int
+	Pos  int
 }
 
 func newPosition(lines []string, idx file.Idx) Position {
@@ -33,7 +33,7 @@ func newPosition(lines []string, idx file.Idx) Position {
 	for i, line := range lines {
 		size := len(line)
 		seek += size + 1
-		if seek  >= p.Pos {
+		if seek >= p.Pos {
 			p.Line = i + 1
 			break
 		}
@@ -76,7 +76,6 @@ func ParseAndCheck(dir string, golangFunctions map[string]diapason.Range) []Prob
 
 	return problems
 }
-
 
 func getAllFiles(root string) []string {
 	var ret []string
