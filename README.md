@@ -1,10 +1,6 @@
 # linter
-Проверка кол-ва параметров переданных из js задач в go
-
-Флаги запуска:
-
-*  -go=<путь до goja_api.go>
-  
-*  -js=<путь до директории с js задачами>
-
-* -list=<выходной файл со списком открытых функций>
+Check amount of parameters in js-golang tasks.
+Flags:
+*  -go=<path_to_goja_api.go>
+*  -js=<path_to_js_tasks>
+*  -list=<output_file>
